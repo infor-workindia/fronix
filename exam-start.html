@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Start Exam Recording</title>
+</head>
+<body>
+    <h2>Recording started... Redirecting to your exam!</h2>
+    <video autoplay muted playsinline id="preview"></video>
+    <script>
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function(stream) {
+                document.getElementById("preview").srcObject = stream;
+
+                const options = { mimeType: 'video/webm; codecs=vp9' };
+                const recorder = new MediaRecorder(stream, options);
+                const chunks = [];
+
+                recorder.ondataavailable = function(e) { chunks.push(e.data); };
+
+                recorder.onstop = function() {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'exam_recording.webm';
+                    link.click();
+                    window.location.href = "https://forms.gle/YOUR_FORM_LINK_HERE";
+                };
+
+                recorder.start();
+
+                setTimeout(() => {
+                    recorder.stop();
+                    stream.getTracks().forEach(track => track.stop()); // Stop camera access
+                }, 5000);
+            })
+            .catch(function(err) {
+                console.error("Error accessing camera:", err);
+                alert("Camera access denied! Please enable permissions to continue.");
+            });
+    </script>
+</body>
+</html>
